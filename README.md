@@ -1,6 +1,6 @@
 # anki-voice
 
-Voice review of anki-cards via Claude voice mode.
+Hands-off Anki review via Claude voice mode.
 
 Claude reads each card's front, listens to your answer, tells you whether it
 was right, and records the grade in Anki. It works by running a small server
@@ -220,11 +220,9 @@ All settings are environment variables.
 | `ANKICONNECT_URL` | `http://127.0.0.1:8765` | Where AnkiConnect listens |
 
 
-### For developers
+## For developers
 
-How Claude runs a review is set by the instructions at the top of
+- How Claude runs a review is set by the instructions at the top of
 `src/anki_voice/server.py`.
 
-```bash
-uv run pytest
-```
+- You can run tests via uv: `uv run pytest`
