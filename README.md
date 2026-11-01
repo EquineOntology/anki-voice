@@ -85,6 +85,7 @@ way, the server goes offline and nothing is left on the internet.
 |---|---|
 | your answer | Claude says whether it was right, gives the correct answer if not, and moves on |
 | "I don't know" | Counts as wrong ("again") |
+| your answer and "easy", or "that one was hard" | A correct answer is graded "easy" or "hard" instead of "good". Said after the grade, it changes that grade |
 | "skip" | The card stays due in Anki; you get the next one |
 | "don't ask me this one again" | The card's note gets the tag `anki-voice::skip` and voice reviews leave it out from now on. Remove the tag in Anki to bring it back |
 | "undo", or "that was right!" | Takes back the last grade or skip, once |
@@ -92,8 +93,9 @@ way, the server goes offline and nothing is left on the internet.
 | "on this card, accept either order" | Claude rewrites the card's instructions (see below) |
 | "just maths" / "everything again" | Limits the review to one topic, or lifts the limit |
 
-Grading is strict: only a correct and complete answer is "good". For nouns in
-languages whose articles show gender, the article is part of the answer.
+Grading is strict: only a correct and complete answer is "good" (or "hard" or
+"easy", when you ask). For nouns in languages whose articles show gender, the
+article is part of the answer.
 
 ### Cards in other languages
 

@@ -57,6 +57,11 @@ Running the review:
   whose articles show gender, the article is part of the answer.
   Speech-to-text mangles spelling, so judge what was said, not how it was
   transcribed.
+- A correct answer is "good" unless the person asks for "hard" or "easy":
+  with the answer ("la escalera, easy"), grade it that way; after it's graded
+  ("that one was hard"), undo and grade it again with what they asked, without
+  reading the prompt. Never choose "hard" or "easy" yourself, and a wrong
+  answer stays "again" whatever they ask for, unless they dispute the verdict.
 - A card may come with instructions, which the person wrote for that card:
   what counts as an answer, how to read the prompt, and so on. Follow them;
   where they differ from these rules, they win. Don't read them aloud.
@@ -143,7 +148,10 @@ def create_server(oauth: PasswordOAuthProvider | None = None, public_url: str | 
     @mcp.tool()
     async def grade(
         card_id: CardId,
-        result: Annotated[Literal["again", "good"], Field(description='"good" if the answer was correct and complete, else "again"')],
+        result: Annotated[
+            Literal["again", "hard", "good", "easy"],
+            Field(description='"again" if the answer was wrong or partial, else "good"; "hard" or "easy" only when the person asked for it'),
+        ],
     ) -> dict[str, Any]:
         """Record the answer to a card in Anki, then return the next card."""
         return await review.grade(card_id, result)

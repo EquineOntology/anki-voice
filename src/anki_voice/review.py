@@ -14,7 +14,7 @@ from typing import Any
 from .anki import AnkiConnect
 from .cards import VOICE_FIELD, Languages, is_voice_friendly, language_hint, to_payload
 
-GRADES = ("again", "good")  # AnkiConnect's names for the two answers a voice review gives
+GRADES = ("again", "hard", "good", "easy")  # AnkiConnect's names for Anki's answer buttons
 SKIP_TAG = "anki-voice::skip"  # notes tagged this are left out of every voice review
 # Anki's flags by the names its Browse window gives them; "none" clears a flag.
 FLAGS = {"none": 0, "red": 1, "orange": 2, "green": 3, "blue": 4, "pink": 5, "turquoise": 6, "purple": 7}
@@ -151,7 +151,7 @@ class Review:
 
     async def grade(self, card_id: int, result: str) -> dict[str, Any]:
         if result not in GRADES:
-            raise ValueError(f'result must be "again" or "good", not {result!r}')
+            raise ValueError(f"result must be one of {', '.join(GRADES)}, not {result!r}")
         state = await self._state()
         if card_id not in {c["cardId"] for c in state["queue"]}:
             raise ValueError(f"Card {card_id} is not up for review now; it may already be graded.")

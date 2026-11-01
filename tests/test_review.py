@@ -170,12 +170,21 @@ async def test_card_graded_again_waits_behind_reviews():
 
 
 @pytest.mark.anyio
+@pytest.mark.parametrize("result", ["again", "hard", "good", "easy"])
+async def test_every_anki_answer_can_be_given(result):
+    anki = FakeAnki([card(1, 2, 100)], due_ids=[1])
+    after = await Review(anki=anki).grade(1, result)
+    assert anki.answers == [(1, result)]
+    assert after["graded"]["result"] == result
+
+
+@pytest.mark.anyio
 async def test_grading_a_card_that_is_not_up_refuses():
     review = Review(anki=FakeAnki([card(1, 2, 100)], due_ids=[1]))
     with pytest.raises(ValueError):
         await review.grade(99, "good")
     with pytest.raises(ValueError):
-        await review.grade(1, "hard")
+        await review.grade(1, "medium")
 
 
 @pytest.mark.anyio
