@@ -1,6 +1,6 @@
 # anki-voice
 
-Hands-off Anki review via Claude voice mode.
+Hands-free Anki review via Claude voice mode.
 
 Claude reads each card's front, listens to your answer, tells you whether it
 was right, and records the grade in Anki. It works by running a small server
