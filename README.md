@@ -129,7 +129,7 @@ accept either order").
   for the card at the top of its own queue. The session puts the window back on
   the Decks screen when it starts, and again if Anki refuses an answer.
 
-## Which cards come up
+### Which cards come up
 
 1. Cards in learning that are due now
 2. Reviews due, shuffled within each due day
