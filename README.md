@@ -170,7 +170,16 @@ the speech you can't skip.
   (readable only by you), so restarting doesn't sign Claude out. Delete that
   file to sign everything out.
 - **Guessing is limited.** After 10 wrong passwords in 15 minutes, sign-in is
-  refused for the rest of that window.
+  refused for the rest of that window. The limit is shared by everyone, so
+  someone who finds the address can keep you from signing in for as long as
+  they keep guessing. Claude stays connected if it already is.
+- **Card text reaches Claude as-is.** Each card's front, back and
+  `AnkiVoice instructions` field go to Claude, including text a template
+  hides, and Claude follows the instructions field over its general rules. A
+  shared deck written by someone else could use that to have Claude misgrade
+  cards or rewrite other notes' instructions. Check the instructions field of
+  shared decks before you review them by voice, or leave them out with
+  `ANKI_VOICE_EXCLUDE_DECKS`.
 
 ### Why the wait when starting a session
 
