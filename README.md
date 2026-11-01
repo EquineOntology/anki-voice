@@ -1,12 +1,17 @@
 # anki-voice
 
-Review your Anki cards out loud, hands-free, by talking to Claude in voice mode.
+Voice review of anki-cards via Claude voice mode.
 
 Claude reads each card's front, listens to your answer, tells you whether it
-was right, and records the grade in Anki. It works because a small server runs
+was right, and records the grade in Anki. It works by running a small server
 on your Mac next to Anki and Claude connects to it as a custom connector.
 
-## What you need
+## Setup
+
+Your agent can take care of the setup, except for a few like generating a
+password, signing up for Tailscale, etc.
+
+### Prereqs
 
 - A Mac with [Anki](https://apps.ankiweb.net) and the
   [AnkiConnect](https://foosoft.net/projects/anki-connect/) add-on
@@ -14,12 +19,12 @@ on your Mac next to Anki and Claude connects to it as a custom connector.
 - [Tailscale](https://tailscale.com), with
   [Funnel](https://tailscale.com/kb/1223/funnel) enabled for your tailnet. It
   puts the server on the internet for the length of a review, so Claude can
-  reach it.
+  reach it. You can do this on a free account.
 - A place to keep the sign-in password, ideally a password manager with a
   command-line tool
 - A Claude account that can add custom connectors
 
-## Set up once
+### First-time setup
 
 1. **Choose a password** of at least 16 characters. Claude will ask for it
    the first time it connects. Tell the server how to get it by setting, in
@@ -99,10 +104,8 @@ or back shows one of the flags. Separate languages with commas:
 `'Spanish 🇪🇸 🇲🇽, French 🇫🇷'`.
 
 Claude reads these cards with its voice for that language, and speaks only
-that language on them. Only you can switch the voice (in the Claude app: voice
-settings, Spoken language). Cards come grouped by language, so you switch at
-most once each way: Claude says when to switch and waits until you say it's
-done. Claude assumes the voice starts on your usual language.
+that language on them. Or that's how it works most of the time, it's a bit
+finicky. If it doesn't work well, try doing a session only on that deck.
 
 ### Instructions for single cards
 
@@ -130,7 +133,7 @@ accept either order").
 2. Reviews due, shuffled within each due day
 3. Cards in learning due within the next 20 minutes
 
-New cards don't come up. Neither do suspended or buried cards, cards from
+New cards **do not** come up. Neither do suspended or buried cards, cards from
 excluded decks, or cards whose front needs a picture or a sound. Claude tells
 you at the end how many of those last were left out.
 
@@ -139,7 +142,9 @@ comes back when its learning step makes it due. Anki logs each answer with the
 time from when Claude got the card to when it was graded, less 10 seconds for
 the speech you can't skip.
 
-## Security
+## Technical details
+
+### Security
 
 - **Online only during a review.** The Funnel and its public address exist only
   while a session runs. A small guard process takes the Funnel down as soon as
@@ -164,7 +169,7 @@ the speech you can't skip.
 - **Guessing is limited.** After 10 wrong passwords in 15 minutes, sign-in is
   refused for the rest of that window.
 
-## Why the wait
+### Why the wait when starting a session
 
 Tailscale publishes the server's public address in DNS only when the Funnel
 starts, and the record often takes 10 minutes or more to appear. If anything
@@ -175,26 +180,7 @@ request through the public relay actually reaches the server. Only then does it
 say it's online. After that it checks every minute and tells you if the server
 stops answering.
 
-## Settings
-
-All settings are environment variables.
-
-| Variable | Default | What it sets |
-|---|---|---|
-| `ANKI_VOICE_PASSWORD_COMMAND` | | A command that prints the sign-in password |
-| `ANKI_VOICE_PASSWORD` | | The password itself, instead of a command |
-| `ANKI_VOICE_LANGUAGES` | none | Languages to read in their own voice, each with its flags, comma-separated |
-| `ANKI_VOICE_EXCLUDE_DECKS` | none | Decks to leave out, with their subdecks, comma-separated |
-| `ANKI_VOICE_IDLE_MINUTES` | `30` | Minutes without activity before a session stops |
-| `ANKI_VOICE_LEARN_AHEAD_MINUTES` | `20` | How far ahead cards in learning come up |
-| `ANKI_VOICE_OVERHEAD_SECONDS` | `10` | Taken off each answer time logged in Anki |
-| `ANKI_VOICE_DRY_RUN` | | `1` to try things out: grades, instructions and flags aren't saved to Anki |
-| `ANKI_VOICE_PORT` | `8787` | Local port of the server |
-| `ANKI_VOICE_STATE_FILE` | `~/.local/share/anki-voice/oauth.json` | Where tokens are stored |
-| `ANKI_VOICE_TAILSCALE` | the Mac app's CLI | Path to the `tailscale` command |
-| `ANKICONNECT_URL` | `http://127.0.0.1:8765` | Where AnkiConnect listens |
-
-## Other ways to run it
+### Other ways to run it
 
 **Behind a tunnel of your own**, instead of Tailscale:
 
@@ -214,7 +200,27 @@ stop it.
 uv run anki-voice serve --stdio
 ```
 
-## For developers
+### Settings
+
+All settings are environment variables.
+
+| Variable | Default | What it sets |
+|---|---|---|
+| `ANKI_VOICE_PASSWORD_COMMAND` | | A command that prints the sign-in password |
+| `ANKI_VOICE_PASSWORD` | | The password itself, instead of a command |
+| `ANKI_VOICE_LANGUAGES` | none | Languages to read in their own voice, each with its flags, comma-separated |
+| `ANKI_VOICE_EXCLUDE_DECKS` | none | Decks to leave out, with their subdecks, comma-separated |
+| `ANKI_VOICE_IDLE_MINUTES` | `30` | Minutes without activity before a session stops |
+| `ANKI_VOICE_LEARN_AHEAD_MINUTES` | `20` | How far ahead cards in learning come up |
+| `ANKI_VOICE_OVERHEAD_SECONDS` | `10` | Taken off each answer time logged in Anki |
+| `ANKI_VOICE_DRY_RUN` | | `1` to try things out: grades, instructions and flags aren't saved to Anki |
+| `ANKI_VOICE_PORT` | `8787` | Local port of the server |
+| `ANKI_VOICE_STATE_FILE` | `~/.local/share/anki-voice/oauth.json` | Where tokens are stored |
+| `ANKI_VOICE_TAILSCALE` | the Mac app's CLI | Path to the `tailscale` command |
+| `ANKICONNECT_URL` | `http://127.0.0.1:8765` | Where AnkiConnect listens |
+
+
+### For developers
 
 How Claude runs a review is set by the instructions at the top of
 `src/anki_voice/server.py`.
