@@ -3,13 +3,26 @@ name = "anki-voice"
 version = "0.1.0"
 description = "MCP server for reviewing Anki cards by voice from the Claude app"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
+keywords = ["anki", "mcp", "claude", "voice", "flashcards"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: MacOS X",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Topic :: Education",
+]
 dependencies = [
     "mcp>=2.3,<3",
     "httpx>=0.27",
     "starlette>=0.40",
     "uvicorn>=0.30",
 ]
+
+[project.urls]
+Repository = "https://github.com/EquineOntology/anki-voice"
 
 [project.scripts]
 anki-voice = "anki_voice.server:main"

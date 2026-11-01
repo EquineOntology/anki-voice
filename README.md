@@ -13,11 +13,13 @@ password, signing up for Tailscale, etc.
 
 ### Prereqs
 
-- A Mac with [Anki](https://apps.ankiweb.net) and the
-  [AnkiConnect](https://foosoft.net/projects/anki-connect/) add-on
+- A Mac: anki-voice runs on macOS only, `serve` included
+- [Anki](https://apps.ankiweb.net) with a recent
+  [AnkiConnect](https://foosoft.net/projects/anki-connect/) add-on, one that
+  has its JSON-RPC API v1 (see [Checking AnkiConnect](#checking-ankiconnect))
 - [uv](https://docs.astral.sh/uv/)
 - [Tailscale](https://tailscale.com), with
-  [Funnel](https://tailscale.com/kb/1223/funnel) enabled for your tailnet. It
+  MagicDNS and [Funnel](https://tailscale.com/kb/1223/funnel) enabled for your tailnet. It
   puts the server on the internet for the length of a review, so Claude can
   reach it. You can do this on a free account.
 - A place to keep the sign-in password, ideally a password manager with a
@@ -26,7 +28,12 @@ password, signing up for Tailscale, etc.
 
 ### First-time setup
 
-1. **Choose a password** of at least 16 characters. Claude will ask for it
+1. **Install it**:
+
+   ```bash
+   uv tool install anki-voice
+   ```
+2. **Choose a password** of at least 16 characters. Claude will ask for it
    the first time it connects. Tell the server how to get it by setting, in
    your shell profile, a command that prints it:
 
@@ -34,11 +41,14 @@ password, signing up for Tailscale, etc.
    export ANKI_VOICE_PASSWORD_COMMAND='<your password manager> get anki-voice'
    ```
 
-   or the password itself, in `ANKI_VOICE_PASSWORD`.
-2. **Add the instructions field** to your note types:
+   or the password itself, in `ANKI_VOICE_PASSWORD`. Prefer the command: the
+   password then exists only in the server's memory, while
+   `ANKI_VOICE_PASSWORD` keeps it in plain text in your profile and in the
+   environment of everything started from your shell.
+3. **Add the instructions field** to your note types:
 
    ```bash
-   uv run anki-voice add-field
+   anki-voice add-field
    ```
 
    This adds an `AnkiVoice instructions` field to every note type that lacks
@@ -46,18 +56,18 @@ password, signing up for Tailscale, etc.
    Changing a note type needs a full sync, so sync your other devices first,
    then choose "upload" at the next sync. Run it again after you create a
    new note type.
-3. **Name the languages you study**, if any, so their cards are read in that
+4. **Name the languages you study**, if any, so their cards are read in that
    language (see [Cards in other languages](#cards-in-other-languages)):
 
    ```bash
    export ANKI_VOICE_LANGUAGES='Spanish 🇪🇸 🇲🇽'
    ```
-4. **Leave out decks** that don't work by voice, if you like:
+5. **Leave out decks** that don't work by voice, if you like:
 
    ```bash
    export ANKI_VOICE_EXCLUDE_DECKS='Geography::Flags,Music'
    ```
-5. **Add the connector in Claude** once a session is online (see below): add a
+6. **Add the connector in Claude** once a session is online (see below): add a
    custom connector with the address the session prints, and choose **Sign in
    now** and **Register automatically**. A sign-in page opens; enter the
    password.
@@ -65,7 +75,7 @@ password, signing up for Tailscale, etc.
 ## Run a review
 
 ```bash
-uv run anki-voice session
+anki-voice session
 ```
 
 Then **wait until it prints `online at https://…/mcp`**. This often takes 10
@@ -198,7 +208,7 @@ stops answering.
 
 ```bash
 export ANKI_VOICE_PUBLIC_URL=https://<your tunnel's address>
-uv run anki-voice serve
+anki-voice serve
 ```
 
 It gets the password the same way a session does. The server listens on
@@ -209,7 +219,7 @@ stop it.
 **For a local client** such as Claude Code, without sign-in:
 
 ```bash
-uv run anki-voice serve --stdio
+anki-voice serve --stdio
 ```
 
 ### Settings
@@ -230,10 +240,29 @@ All settings are environment variables.
 | `ANKI_VOICE_STATE_FILE` | `~/.local/share/anki-voice/oauth.json` | Where tokens are stored |
 | `ANKICONNECT_URL` | `http://127.0.0.1:8765` | Where AnkiConnect listens |
 
+### Checking AnkiConnect
+
+anki-voice uses AnkiConnect's long-standing API (version 6) to read cards and
+change notes, and its newer JSON-RPC API v1 (at `/api/v1`) to grade, flag and
+undo. Older AnkiConnect releases have only the first. To check yours, with Anki
+open:
+
+```bash
+curl -s localhost:8765/api/v1 -d '{"jsonrpc":"2.0","id":1,"method":"operations.get","params":{"operationId":"check"}}'
+```
+
+A reply that starts with `{"jsonrpc"` (here, "Operation not found") means API v1
+is there. anki-voice is tested with the AnkiConnect release of October 2026,
+which needs Anki 26.8 or later.
+
 
 ## For developers
 
 - How Claude runs a review is set by the instructions at the top of
 `src/anki_voice/server.py`.
 
-- You can run tests via uv: `uv run pytest`
+- You can run tests via uv: `uv run pytest`, and anki-voice from the
+  checkout with `uv run anki-voice …`.
+- To release: set the new version in `pyproject.toml` (and `uv lock`), commit,
+  then push a tag `v<version>`. GitHub Actions runs the tests, and publishes to
+  PyPI only if the tag matches the version.

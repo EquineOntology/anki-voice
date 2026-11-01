@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import Annotated, Any, Literal
 from urllib.parse import urlparse
@@ -202,6 +203,8 @@ def create_http_app(public_url: str, password: str, state_file: Path):
 
 
 def main() -> None:
+    if sys.platform != "darwin":
+        sys.exit("anki-voice runs on macOS only.")
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     session = commands.add_parser("session", help="go online through Tailscale Funnel for one review, then stop")
