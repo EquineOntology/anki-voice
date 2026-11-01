@@ -152,10 +152,11 @@ the speech you can't skip.
   published:
 
   ```bash
-  /Applications/Tailscale.app/Contents/MacOS/Tailscale funnel status
+  tailscale funnel status
   ```
 
-  It should say "No serve config".
+  It should say "No serve config". If only the Mac app is installed, the
+  command is `/Applications/Tailscale.app/Contents/MacOS/Tailscale`.
 - **Password sign-in.** The server signs Claude in itself, with one password.
   Every request without a valid token is refused.
 - **Only Claude can sign in.** The sign-in only ever sends its result to
@@ -216,7 +217,6 @@ All settings are environment variables.
 | `ANKI_VOICE_DRY_RUN` | | `1` to try things out: grades, instructions and flags aren't saved to Anki |
 | `ANKI_VOICE_PORT` | `8787` | Local port of the server |
 | `ANKI_VOICE_STATE_FILE` | `~/.local/share/anki-voice/oauth.json` | Where tokens are stored |
-| `ANKI_VOICE_TAILSCALE` | the Mac app's CLI | Path to the `tailscale` command |
 | `ANKICONNECT_URL` | `http://127.0.0.1:8765` | Where AnkiConnect listens |
 
 

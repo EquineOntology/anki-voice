@@ -157,6 +157,39 @@ async def test_not_online_if_the_session_stops_first(monkeypatch, clock):
     assert not event.is_set() and not said
 
 
+@pytest.fixture
+def installed(monkeypatch, tmp_path):
+    """Pretend the Mac app and a CLI on PATH are installed or not."""
+    session.tailscale_cli.cache_clear()
+    app = tmp_path / "Tailscale"
+
+    def install(mac_app, on_path):
+        if mac_app:
+            app.touch()
+        monkeypatch.setattr(session, "MAC_APP_CLI", str(app))
+        monkeypatch.setattr(session.shutil, "which", lambda name: "/opt/homebrew/bin/tailscale" if on_path else None)
+        return str(app)
+
+    yield install
+    session.tailscale_cli.cache_clear()
+
+
+def test_the_mac_apps_cli_comes_first(installed):
+    app = installed(mac_app=True, on_path=True)
+    assert session.tailscale_cli() == app
+
+
+def test_otherwise_tailscale_on_path(installed):
+    installed(mac_app=False, on_path=True)
+    assert session.tailscale_cli() == "/opt/homebrew/bin/tailscale"
+
+
+def test_no_tailscale_stops_the_session(installed):
+    installed(mac_app=False, on_path=False)
+    with pytest.raises(SystemExit):
+        session.tailscale_cli()
+
+
 def test_password_from_the_environment(monkeypatch):
     monkeypatch.setenv("ANKI_VOICE_PASSWORD", "p" * 16)
     monkeypatch.setenv("ANKI_VOICE_PASSWORD_COMMAND", "exit 1")

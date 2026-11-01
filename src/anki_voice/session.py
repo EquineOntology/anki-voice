@@ -12,10 +12,12 @@ the Funnel still goes down, but Tailscale stays connected.
 import asyncio
 import json
 import os
+import shutil
 import signal
 import subprocess
 import sys
 import time
+from functools import cache
 from pathlib import Path
 
 import uvicorn
@@ -23,7 +25,7 @@ import uvicorn
 from .anki import AnkiConnect, AnkiError
 from .review import Review
 
-TAILSCALE = os.environ.get("ANKI_VOICE_TAILSCALE", "/Applications/Tailscale.app/Contents/MacOS/Tailscale")
+MAC_APP_CLI = "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 IDLE_MINUTES = int(os.environ.get("ANKI_VOICE_IDLE_MINUTES", "30"))
 DONE_GRACE_SECONDS = 120  # time for Claude to say the review is over
 
@@ -32,8 +34,22 @@ def say(message: str) -> None:
     print(f"anki-voice: {message}", flush=True)
 
 
+@cache
+def tailscale_cli() -> str:
+    """The Mac app's own CLI if the app is installed, else `tailscale` on PATH.
+
+    The app comes first: a CLI installed some other way may talk to a different
+    tailscaled than the one the app runs.
+    """
+    if os.path.exists(MAC_APP_CLI):
+        return MAC_APP_CLI
+    if found := shutil.which("tailscale"):
+        return found
+    sys.exit("anki-voice: Tailscale isn't installed: found neither the Mac app nor `tailscale` on PATH.")
+
+
 def tailscale(*args: str) -> subprocess.CompletedProcess:
-    return subprocess.run([TAILSCALE, *args], capture_output=True, text=True)
+    return subprocess.run([tailscale_cli(), *args], capture_output=True, text=True)
 
 
 def tailscale_state() -> dict:
@@ -246,7 +262,7 @@ async def run(port: int, state_file: Path) -> None:
     caffeinate = subprocess.Popen(["caffeinate", "-i", "-w", str(os.getpid())])
     # The guard stops the Funnel once this process is gone, even after `kill -9`.
     funnel = subprocess.Popen(
-        [sys.executable, "-m", "anki_voice.guard", TAILSCALE, "funnel", str(port)],
+        [sys.executable, "-m", "anki_voice.guard", tailscale_cli(), "funnel", str(port)],
         stdin=subprocess.PIPE, stdout=sys.stdout, stderr=sys.stderr,
     )
     # Tailscale publishes the Funnel's DNS record only once the Funnel is up, and it
