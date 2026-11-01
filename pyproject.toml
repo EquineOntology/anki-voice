@@ -1,0 +1,28 @@
+[project]
+name = "anki-voice"
+version = "0.1.0"
+description = "MCP server for reviewing Anki cards by voice from the Claude app"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp>=2.3,<3",
+    "httpx>=0.27",
+    "starlette>=0.40",
+    "uvicorn>=0.30",
+]
+
+[project.scripts]
+anki-voice = "anki_voice.server:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "anyio>=4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
