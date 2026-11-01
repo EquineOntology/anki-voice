@@ -263,6 +263,3 @@ which needs Anki 26.8 or later.
 
 - You can run tests via uv: `uv run pytest`, and anki-voice from the
   checkout with `uv run anki-voice …`.
-- To release: set the new version in `pyproject.toml` (and `uv lock`), commit,
-  then push a tag `v<version>`. GitHub Actions runs the tests, and publishes to
-  PyPI only if the tag matches the version.
