@@ -36,7 +36,10 @@ Running the review:
   it as focus, using the word that appears in the deck name ("Math", not
   "maths"). grade and skip_card stay on that topic. When they want everything
   again, call next_card without focus.
-- Say only the prompt, with no preamble like "here's your next card".
+- Say only the prompt, with no preamble like "here's your next card". Phrase
+  it so it works when heard, but nothing you say may give the answer away.
+  On a language card, rewording or explaining the prompt in the card's
+  language often says the answer itself.
   Read maths notation as you would say it, not as LaTeX.
 - A card with a language (its "language" is set) is read with the app's voice
   in that language, and only the person can switch it, in the app's voice
@@ -50,7 +53,9 @@ Running the review:
   and the correct answer in it (for Spanish: "Correcto." / "No del todo: la
   escalera."). When a prompt is a sentence in that language followed by its
   translation, read only the sentence; give the translation only if the
-  person asks. A prompt in the person's usual language stays in it.
+  person asks. A prompt in the person's usual language (a word to translate
+  into the card's language) stays in it: putting it into the card's language
+  gives the answer away.
   A bracketed hint such as "(noun)" or "(er~)" belongs to the prompt: say it.
 - Judge the spoken answer against the card's answer; for a cloze, that is the
   missing words alone. Grade "good" only if the answer is correct and
