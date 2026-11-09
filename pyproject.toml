@@ -1,6 +1,6 @@
 [project]
 name = "anki-voice"
-version = "1.0.2"
+version = "1.0.3"
 description = "MCP server for reviewing Anki cards by voice from the Claude app"
 readme = "README.md"
 license = "MIT"
