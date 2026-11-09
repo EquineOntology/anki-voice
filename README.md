@@ -122,7 +122,9 @@ finicky. If it doesn't work well, try doing a session only on that deck.
 ### Instructions for single cards
 
 The `AnkiVoice instructions` field on a note tells Claude how to treat its
-cards: what counts as an answer, how to read the prompt. Claude follows them
+cards: what the card trains (so Claude doesn't give it away), what counts as
+an answer, how to read the prompt. Without them, Claude takes what a card
+trains from the notes on its back. Claude follows them
 over its general rules and never reads them aloud. No card template shows the
 field, so the cards look the same in Anki.
 
