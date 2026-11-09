@@ -30,6 +30,10 @@ FLAGS = {"none": 0, "red": 1, "orange": 2, "green": 3, "blue": 4, "pink": 5, "tu
 # slower than short ones. Overridden by ANKI_VOICE_OVERHEAD_SECONDS.
 VOICE_OVERHEAD_SECONDS = 10.0
 
+
+class ReviewError(ValueError):
+    """A request the review can't carry out; the message is meant for Claude."""
+
 # Anki card queues (cardsInfo "queue")
 LEARNING = 1  # intraday learning; "due" is a Unix timestamp
 REVIEW = 2
@@ -151,10 +155,10 @@ class Review:
 
     async def grade(self, card_id: int, result: str) -> dict[str, Any]:
         if result not in GRADES:
-            raise ValueError(f"result must be one of {', '.join(GRADES)}, not {result!r}")
+            raise ReviewError(f"result must be one of {', '.join(GRADES)}, not {result!r}")
         state = await self._state()
         if card_id not in {c["cardId"] for c in state["queue"]}:
-            raise ValueError(f"Card {card_id} is not up for review now; it may already be graded.")
+            raise ReviewError(f"Card {card_id} is not up for review now; it may already be graded.")
         shown_at = self.shown_at.pop(card_id, None)
         elapsed = time.time() - shown_at - self.voice_overhead_seconds if shown_at else 0
         elapsed_ms = max(0, round(elapsed * 1000))
@@ -184,7 +188,7 @@ class Review:
         self.last_activity = time.time()
         [card] = await self.anki.cards_info([card_id])
         if VOICE_FIELD not in card["fields"]:
-            raise ValueError(f'The note type "{card["modelName"]}" has no "{VOICE_FIELD}" field: run `anki-voice add-field`.')
+            raise ReviewError(f'The note type "{card["modelName"]}" has no "{VOICE_FIELD}" field: run `anki-voice add-field`.')
         value = html.escape(instructions.strip(), quote=False).replace("\n", "<br>")
         if not self.dry_run:
             await self.anki.set_field(card["note"], VOICE_FIELD, value)
@@ -198,7 +202,7 @@ class Review:
         grade or skip can no longer be undone.
         """
         if color not in FLAGS:
-            raise ValueError(f"color must be one of {', '.join(FLAGS)}, not {color!r}")
+            raise ReviewError(f"color must be one of {', '.join(FLAGS)}, not {color!r}")
         self.last_activity = time.time()
         if not self.dry_run:
             await self.anki.set_flag(card_id, FLAGS[color])
@@ -218,7 +222,7 @@ class Review:
         """
         action = self.last_action
         if not action:
-            raise ValueError("Nothing to undo: only the last grade or skip can be undone, and only once.")
+            raise ReviewError("Nothing to undo: only the last grade or skip can be undone, and only once.")
         card_id = action["card_id"]
         if action["kind"] == "grade" and not self.dry_run:
             await self.anki.undo()

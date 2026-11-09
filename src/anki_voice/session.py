@@ -18,6 +18,7 @@ import subprocess
 import sys
 import time
 from functools import cache
+from importlib.metadata import version
 from pathlib import Path
 
 import uvicorn
@@ -247,6 +248,8 @@ async def watch(server: uvicorn.Server, review: Review, funnel: subprocess.Popen
 async def run(port: int, state_file: Path) -> None:
     from .server import create_http_app, review
 
+    # `uv run` inside the repo runs the checkout, not the installed tool: say which.
+    say(f"version {version('anki-voice')}, running from {sys.prefix.replace(str(Path.home()), '~')}")
     subprocess.run(["open", "-ga", "Anki"])
     await wait_for_anki(review.anki)
     await review.anki.clear_study_queue()

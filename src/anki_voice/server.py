@@ -5,6 +5,8 @@ import asyncio
 import logging
 import os
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Annotated, Any, Literal
 from urllib.parse import urlparse
@@ -12,13 +14,14 @@ from urllib.parse import urlparse
 import uvicorn
 from mcp.server import MCPServer
 from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions, RevocationOptions
+from mcp.server.mcpserver.exceptions import ToolError
 from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import Field
 
-from .anki import AnkiConnect
+from .anki import AnkiConnect, AnkiError
 from .cards import VOICE_FIELD, parse_languages
 from .oauth import PasswordOAuthProvider
-from .review import FLAGS, VOICE_OVERHEAD_SECONDS, Review
+from .review import FLAGS, VOICE_OVERHEAD_SECONDS, Review, ReviewError
 
 INSTRUCTIONS = """\
 These tools run a spoken Anki review. The person is listening and answering
@@ -130,6 +133,19 @@ review = Review(
     dry_run=os.environ.get("ANKI_VOICE_DRY_RUN") == "1",
 )
 
+@contextmanager
+def errors_for_claude() -> Iterator[None]:
+    """Pass the reason a call failed on to Claude.
+
+    The MCP SDK treats any other exception as a crash: it logs a traceback and
+    tells Claude only that the tool failed, keeping the message on the server.
+    """
+    try:
+        yield
+    except (ReviewError, AnkiError) as e:
+        raise ToolError(str(e)) from e
+
+
 CardId = Annotated[int, Field(description="card_id of the card being answered, from the last result")]
 
 
@@ -160,8 +176,9 @@ def create_server(oauth: PasswordOAuthProvider | None = None, public_url: str | 
         ] = None,
     ) -> dict[str, Any]:
         """Start or restart the review and get the next card due, with its prompt, its answer and how many are left."""
-        review.focus = focus or None
-        return await review.next()
+        with errors_for_claude():
+            review.focus = focus or None
+            return await review.next()
 
     @mcp.tool()
     async def grade(
@@ -172,7 +189,8 @@ def create_server(oauth: PasswordOAuthProvider | None = None, public_url: str | 
         ],
     ) -> dict[str, Any]:
         """Record the answer to a card in Anki, then return the next card."""
-        return await review.grade(card_id, result)
+        with errors_for_claude():
+            return await review.grade(card_id, result)
 
     @mcp.tool()
     async def skip_card(
@@ -180,7 +198,8 @@ def create_server(oauth: PasswordOAuthProvider | None = None, public_url: str | 
         always: Annotated[bool, Field(description="true to leave this card out of every future voice review too")] = False,
     ) -> dict[str, Any]:
         """Leave a card ungraded and return the next card. With always=true, voice reviews leave the card out for good."""
-        return await review.skip(card_id, always)
+        with errors_for_claude():
+            return await review.skip(card_id, always)
 
     @mcp.tool()
     async def set_instructions(
@@ -188,7 +207,8 @@ def create_server(oauth: PasswordOAuthProvider | None = None, public_url: str | 
         instructions: Annotated[str, Field(description="The complete new instructions for the card's note; replaces the old ones, empty clears them")],
     ) -> dict[str, Any]:
         """Change the instructions on a card's note in Anki, at the person's request. They apply to every card of that note."""
-        return await review.set_instructions(card_id, instructions)
+        with errors_for_claude():
+            return await review.set_instructions(card_id, instructions)
 
     @mcp.tool()
     async def flag_card(
@@ -196,12 +216,14 @@ def create_server(oauth: PasswordOAuthProvider | None = None, public_url: str | 
         color: Annotated[Literal[tuple(FLAGS)], Field(description='The colour the person named; "none" removes the flag')],
     ) -> dict[str, Any]:
         """Flag a card in Anki at the person's request, for them to look at later. It doesn't answer the card."""
-        return await review.flag(card_id, color)
+        with errors_for_claude():
+            return await review.flag(card_id, color)
 
     @mcp.tool()
     async def undo() -> dict[str, Any]:
         """Take back the last grade or skip (once only) and return that card as the next one."""
-        return await review.undo()
+        with errors_for_claude():
+            return await review.undo()
 
     return mcp
 
